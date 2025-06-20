@@ -1,3 +1,10 @@
 {
-  "users": []
+  "users": [
+    {
+      "name": "ali",
+      "code": "ali",
+      "points": 3000,
+      "vip": false
+    }
+  ]
 }
