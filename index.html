@@ -1,15 +1,143 @@
 
 <!DOCTYPE html>
-<html lang="ar">
+<html lang="ar" dir="rtl">
 <head>
   <meta charset="UTF-8">
+  <title>لوحة الدخول والتسجيل</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>منصة دينارنا</title>
-  <link rel="stylesheet" href="style.css">
+  <style>
+    @keyframes gradientMove {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+
+    @keyframes fadeInUp {
+      0% { opacity: 0; transform: translateY(20px); }
+      100% { opacity: 1; transform: translateY(0); }
+    }
+
+    body {
+      margin: 0; font-family: 'Segoe UI', sans-serif;
+      background: linear-gradient(-45deg, #0f2027, #203a43, #2c5364);
+      background-size: 400% 400%;
+      animation: gradientMove 10s ease infinite;
+      display: flex; justify-content: center; align-items: center;
+      height: 100vh; flex-direction: column; text-align: center;
+    }
+
+    h1, h2 {
+      background: linear-gradient(to right, #f7971e, #ffd200);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      animation: fadeInUp 2s ease forwards;
+      opacity: 0;
+    }
+
+    h1 {
+      font-size: 32px;
+      animation-delay: 0.5s;
+    }
+
+    h2 {
+      font-size: 20px;
+      animation-delay: 1.5s;
+    }
+
+    .box {
+      background: rgba(255, 255, 255, 0.95); padding: 20px; border-radius: 15px;
+      box-shadow: 0 0 15px rgba(0,0,0,0.3); width: 300px;
+      animation: fadeInUp 2s ease forwards;
+      animation-delay: 2.5s;
+      opacity: 0;
+    }
+
+    input {
+      width: 90%; padding: 10px; margin: 10px 0;
+      border-radius: 10px; border: 1px solid #ccc;
+    }
+
+    button {
+      width: 95%; padding: 10px; margin-top: 10px;
+      background-color: #27ae60; color: white;
+      border: none; border-radius: 10px; cursor: pointer;
+      transition: background-color 0.3s ease;
+    }
+
+    button:hover {
+      background-color: #1e8449;
+    }
+
+    #main { display: none; }
+  </style>
 </head>
 <body>
-  <h1>مرحباً بك في منصة دينارنا</h1>
-  <p>منصة للمهام، الشحن، وسحب الأرباح بالدينار العراقي.</p>
-  <script src="script.js"></script>
+  <h1>أهلاً وسهلاً بكم في ديناري</h1>
+  <h2>Welcome in Dinary</h2>
+
+  <div class="box" id="auth">
+    <h3>تسجيل / دخول</h3>
+    <input type="text" id="username" placeholder="اسم المستخدم" required>
+    <input type="password" id="password" placeholder="كلمة المرور" required>
+    <button onclick="register()">تسجيل</button>
+    <button onclick="login()">دخول</button>
+  </div>
+
+  <div class="box" id="main">
+    <h2>مرحبًا <span id="userDisplay"></span>!</h2>
+    <p>أهلاً بك في حسابك.</p>
+    <button onclick="logout()">تسجيل الخروج</button>
+  </div>
+
+  <script>
+    const authBox = document.getElementById("auth");
+    const mainBox = document.getElementById("main");
+    const userDisplay = document.getElementById("userDisplay");
+
+    window.onload = () => {
+      const storedUser = localStorage.getItem("user");
+      const storedPass = localStorage.getItem("pass");
+      if (storedUser && storedPass) {
+        showMain(storedUser);
+      }
+    };
+
+    function register() {
+      const user = document.getElementById("username").value;
+      const pass = document.getElementById("password").value;
+      if (user && pass) {
+        localStorage.setItem("user", user);
+        localStorage.setItem("pass", pass);
+        alert("تم التسجيل بنجاح");
+        showMain(user);
+      } else {
+        alert("يرجى تعبئة كل الحقول");
+      }
+    }
+
+    function login() {
+      const user = document.getElementById("username").value;
+      const pass = document.getElementById("password").value;
+      const storedUser = localStorage.getItem("user");
+      const storedPass = localStorage.getItem("pass");
+
+      if (user === storedUser && pass === storedPass) {
+        showMain(user);
+      } else {
+        alert("بيانات الدخول غير صحيحة");
+      }
+    }
+
+    function logout() {
+      authBox.style.display = "block";
+      mainBox.style.display = "none";
+    }
+
+    function showMain(username) {
+      authBox.style.display = "none";
+      mainBox.style.display = "block";
+      userDisplay.innerText = username;
+    }
+  </script>
 </body>
 </html>
