@@ -24,5 +24,10 @@
       "points": 23000,
       "vip": false
     }
-  ]
+  ],
+  "Ali": {
+    "password": "ali",
+    "points": 1000,
+    "vip": false
+  }
 }
