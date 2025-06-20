@@ -17,6 +17,12 @@
       "code": "ali",
       "points": 3000,
       "vip": false
+    },
+    {
+      "name": "Ali",
+      "code": "123",
+      "points": 3000,
+      "vip": false
     }
   ]
 }
