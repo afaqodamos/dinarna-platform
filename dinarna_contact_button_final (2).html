@@ -1,0 +1,285 @@
+
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+  <meta charset="UTF-8">
+  <title>dinarnna | تسجيل + عجلة حظ</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body { font-family: 'Cairo', sans-serif; background: #f0f0f0; text-align: center; padding: 30px; }
+    .input { padding: 10px; margin: 5px; width: 80%; border-radius: 5px; border: 1px solid #ccc; }
+    button {
+      background-color: #27ae60;
+      color: white;
+      border: none;
+      padding: 12px 25px;
+      font-size: 16px;
+      border-radius: 8px;
+      margin: 10px;
+      cursor: pointer;
+    }
+    #mainApp { display: none; }
+  </style>
+</head>
+<body>
+
+<div id="authSection">
+  <h2>منصة dinarna</h2>
+  <div id="loginBox">
+    <h3>تسجيل الدخول</h3>
+    <input id="loginUser" placeholder="👤 اسم المستخدم" class="input"><br>
+    <input id="loginPass" placeholder="🔐 كلمة المرور" type="password" class="input"><br>
+    <button onclick="login()">دخول</button>
+    <p>لا تملك حساب؟ <a href="#" onclick="toggleRegister()">سجل الآن</a></p>
+    <p id="loginError" style="color:red;"></p>
+  </div>
+
+  <div id="registerBox" style="display:none;">
+    <h3>تسجيل جديد</h3>
+    <input id="regUser" placeholder="👤 اسم المستخدم" class="input"><br>
+    <input id="regPass" placeholder="🔐 كلمة المرور" type="password" class="input"><br>
+    <button onclick="register()">تسجيل</button>
+    <p>لديك حساب؟ <a href="#" onclick="toggleLogin()">تسجيل دخول</a></p>
+    <p id="registerError" style="color:red;"></p>
+  </div>
+</div>
+
+<div id="mainApp">
+  <h2>👤 مرحبًا <span id="username">-</span></h2>
+  <p>💰 رصيدك: <span id="points">0</span> دينار</p>
+<button onclick="showWithdraw()" style="background:#8e44ad;">💸 سحب الرصيد</button>
+<br>
+<button onclick="window.location.href='https://t.me/mrdinary'" style="background:#2980b9; color:white; padding:10px 20px; border:none; border-radius:10px; margin-top:10px;">📩 تواصل مع المدير للحصول على كود شحن (@mrdinary)</button>
+  <button onclick="spin()">🎯 لف العجلة (1000 دينار)</button>
+<button onclick="document.getElementById('rechargeBox').style.display='block'" style="background:#f39c12;">⚡ تشغيل كود الشحن</button>
+  <div id="result" style="font-size:18px; margin-top:20px;"></div>
+  <br><button onclick="logout()" style="background:#c0392b;">🚪 تسجيل الخروج</button>
+</div>
+
+<script>
+  const BOT_TOKEN = "357723373:AAHz5-Mj8GWT1NMKTmicYHq8aMDq6BJgMeM";
+  const ADMIN_ID = "250273112";
+  const prizes = [
+    ...Array(20).fill("حظ أوفر"),
+    ...Array(10).fill("250 دينار"),
+    ...Array(8).fill("500 دينار"),
+    ...Array(5).fill("1000 دينار"),
+    ...Array(3).fill("2000 دينار"),
+    ...Array(1).fill("10000 دينار"),
+    ...Array(1).fill("15000 دينار"),
+    ...Array(1).fill("50000 دينار")
+  ];
+
+  function toggleRegister() {
+    document.getElementById("loginBox").style.display = "none";
+    document.getElementById("registerBox").style.display = "block";
+  }
+
+  function toggleLogin() {
+    document.getElementById("registerBox").style.display = "none";
+    document.getElementById("loginBox").style.display = "block";
+  }
+
+  function register() {
+    const username = document.getElementById("regUser").value.trim();
+    const password = document.getElementById("regPass").value.trim();
+    const errorBox = document.getElementById("registerError");
+    if (!username || !password) return errorBox.innerText = "يرجى ملء جميع الحقول";
+
+    if (localStorage.getItem("deviceRegistered")) {
+      return errorBox.innerText = "⚠️ لا يمكن إنشاء أكثر من حساب على هذا الجهاز.";
+    }
+
+    let users = JSON.parse(localStorage.getItem("users") || "{}");
+    
+    let reservedNames = JSON.parse(localStorage.getItem("validUsernamesGlobal") || "[]");
+    if (users[username] || reservedNames.includes(username)) {
+      return errorBox.innerText = "📛 اسم المستخدم محجوز بالفعل.";
+    }
+    reservedNames.push(username);
+    localStorage.setItem("validUsernamesGlobal", JSON.stringify(reservedNames));
+    
+
+    users[username] = { password: password, points: 1000 };
+    localStorage.setItem("users", JSON.stringify(users));
+    localStorage.setItem("deviceRegistered", "yes");
+    localStorage.setItem("currentUser", username);
+    startApp();
+    startApp();
+  }
+
+  function login() {
+    const username = document.getElementById("loginUser").value.trim();
+    const password = document.getElementById("loginPass").value.trim();
+    const errorBox = document.getElementById("loginError");
+
+    let users = JSON.parse(localStorage.getItem("users") || "{}");
+    if (!users[username] || users[username].password !== password) {
+      return errorBox.innerText = "❌ اسم المستخدم أو كلمة المرور غير صحيحة";
+    }
+
+    localStorage.setItem("currentUser", username);
+    startApp();
+    startApp();
+  }
+
+  function startApp() {
+    document.getElementById("authSection").style.display = "none";
+    document.getElementById("mainApp").style.display = "block";
+    const user = localStorage.getItem("currentUser");
+    const users = JSON.parse(localStorage.getItem("users") || "{}");
+    document.getElementById("username").innerText = user;
+    document.getElementById("points").innerText = users[user].points;
+    sendToBot("🔌 إعادة شحن\n👤 المستخدم: " + user + "\n💳 الكود: " + code + "\n💰 القيمة: " + validCodes[code]);
+  }
+
+  function spin() {
+    let users = JSON.parse(localStorage.getItem("users") || "{}");
+    let user = localStorage.getItem("currentUser");
+
+    if (users[user].points < 1000) {
+      alert("❌ تحتاج إلى 1000 دينار للفة!");
+      return;
+    }
+
+    users[user].points -= 1000;
+
+    const prize = prizes[Math.floor(Math.random() * prizes.length)];
+    if (prize.includes("دينار")) {
+      let value = parseInt(prize.replace(" دينار", ""));
+      users[user].points += value;
+    }
+
+    localStorage.setItem("users", JSON.stringify(users));
+    document.getElementById("points").innerText = users[user].points;
+    sendToBot("🔌 إعادة شحن\n👤 المستخدم: " + user + "\n💳 الكود: " + code + "\n💰 القيمة: " + validCodes[code]);
+    document.getElementById("result").innerHTML = "🎁 نتيجتك: <strong>" + prize + "</strong>";
+    sendToBot(`🎰 لفة عجلة:
+👤 ${user}
+🎁 ${prize}`);
+  }
+
+  function logout() {
+    localStorage.removeItem("currentUser");
+    location.reload();
+  }
+
+  function sendToBot(msg) {
+    fetch("https://api.telegram.org/bot" + BOT_TOKEN + "/sendMessage", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ chat_id: ADMIN_ID, text: msg })
+    });
+  }
+
+  // تحميل تلقائي إذا سبق تسجيل الدخول
+  window.onload = function() {
+      let users = JSON.parse(localStorage.getItem("users") || "{}");
+      if (!users["dev"]) {
+        users["dev"] = { password: "1234", points: 10000 };
+        localStorage.setItem("users", JSON.stringify(users));
+      }
+    
+    const current = localStorage.getItem("currentUser");
+    if (current) startApp();
+  }
+</script>
+
+
+<!-- نافذة السحب -->
+<div id="withdrawBox" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5);">
+  <div style="background:#fff; max-width:400px; margin:100px auto; padding:20px; border-radius:15px;">
+    <h3>💸 طلب سحب</h3>
+    <input id="withdrawPhone" placeholder="📱 رقم الهاتف" class="input"><br>
+    <input id="withdrawAmount" type="number" placeholder="💰 المبلغ" class="input"><br>
+    <button onclick="submitWithdraw()">📤 إرسال الطلب</button>
+    <button onclick="document.getElementById('withdrawBox').style.display='none';" style="background:#999;">❌ إغلاق</button>
+    <p id="withdrawStatus" style="color:red;"></p>
+  </div>
+</div>
+
+<script>
+  function showWithdraw() {
+    document.getElementById("withdrawBox").style.display = "block";
+    document.getElementById("withdrawStatus").innerText = "";
+  }
+
+  function submitWithdraw() {
+    const phone = document.getElementById("withdrawPhone").value.trim();
+    const amount = parseInt(document.getElementById("withdrawAmount").value.trim());
+    const status = document.getElementById("withdrawStatus");
+    let users = JSON.parse(localStorage.getItem("users") || "{}");
+    let user = localStorage.getItem("currentUser");
+
+    if (!phone || isNaN(amount) || amount < 10000) {
+      status.innerText = "❌ الحد الأدنى للسحب هو 10000 دينار";
+      return;
+    }
+
+    if (users[user].points < amount) {
+      status.innerText = "❌ الرصيد غير كافٍ";
+      return;
+    }
+
+    users[user].points -= amount;
+    localStorage.setItem("users", JSON.stringify(users));
+    document.getElementById("points").innerText = users[user].points;
+    sendToBot("🔌 إعادة شحن\n👤 المستخدم: " + user + "\n💳 الكود: " + code + "\n💰 القيمة: " + validCodes[code]);
+    status.style.color = "green";
+    status.innerText = "✅ تم إرسال الطلب";
+    document.getElementById("withdrawBox").style.display = "none";
+
+    sendToBot(`📤 طلب سحب:
+👤 ${user}
+📱 الهاتف: ${phone}
+💰 المبلغ: ${amount} دينار`);
+  }
+</script>
+
+<!-- زر فتح السحب -->
+<br>
+
+<!-- نافذة كود الشحن -->
+<div id="rechargeBox" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5);">
+  <div style="background:#fff; max-width:400px; margin:100px auto; padding:20px; border-radius:15px;">
+    <h3>🔐 تفعيل كود الشحن</h3>
+    <input id="rechargeCode" placeholder="أدخل كود الشحن هنا" class="input"><br>
+    <button onclick="applyRechargeCode()">✅ تفعيل</button>
+    <button onclick="document.getElementById('rechargeBox').style.display='none'" style="background:#999;">❌ إغلاق</button>
+    <p id="rechargeResult" style="color:red;"></p>
+  </div>
+</div>
+
+<script>
+  function applyRechargeCode() {
+    const code = document.getElementById("rechargeCode").value.trim();
+    const user = localStorage.getItem("currentUser");
+    const usedCodes = JSON.parse(localStorage.getItem("usedRechargeCodes") || "[]");
+    const fixedCodes = { "vp5000": 5000, "vpp10000": 10000 };
+    const validCodes = Object.assign({}, fixedCodes, JSON.parse(localStorage.getItem("validRechargeCodesGlobal") || "{}"));
+    let users = JSON.parse(localStorage.getItem("users") || "{}");
+    const result = document.getElementById("rechargeResult");
+
+    if (usedCodes.includes(code + "_" + user)) {
+      result.innerText = "❌ هذا الكود تم استخدامه مسبقًا";
+      return;
+    }
+
+    if (validCodes[code]) {
+      users[user].points += validCodes[code];
+      usedCodes.push(code + "_" + user);
+      localStorage.setItem("users", JSON.stringify(users));
+      localStorage.setItem("usedRechargeCodes", JSON.stringify(usedCodes));
+      document.getElementById("points").innerText = users[user].points;
+    sendToBot("🔌 إعادة شحن\n👤 المستخدم: " + user + "\n💳 الكود: " + code + "\n💰 القيمة: " + validCodes[code]);
+      result.style.color = "green";
+      result.innerText = "✅ تم إضافة " + validCodes[code] + " دينار";
+    } else {
+      result.innerText = "❌ كود غير صالح";
+    }
+  }
+</script>
+
+</body>
+
+</html>
