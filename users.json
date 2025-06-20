@@ -1,33 +1,7 @@
-{
-  "users": [
-    {
-      "name": "ali",
-      "code": "ali",
-      "points": 3000,
-      "vip": false
-    },
-    {
-      "name": "Abd",
-      "code": "ali",
-      "points": 543000,
-      "vip": false
-    },
-    {
-      "name": "ali1",
-      "code": "ali",
-      "points": 3000,
-      "vip": false
-    },
-    {
-      "name": "Ali",
-      "code": "123",
-      "points": 23000,
-      "vip": false
-    }
-  ],
-  "Ali": {
-    "password": "ali",
-    "points": 250,
-    "vip": false
+[
+  {
+    "name": "admin",
+    "pass": "1234",
+    "points": 8000
   }
-}
+]

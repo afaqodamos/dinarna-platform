@@ -1,143 +1,173 @@
 
 <!DOCTYPE html>
-<html lang="ar" dir="rtl">
+<html lang="ar">
 <head>
   <meta charset="UTF-8">
-  <title>لوحة الدخول والتسجيل</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>منصة دينارنا</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <style>
-    @keyframes gradientMove {
-      0% { background-position: 0% 50%; }
-      50% { background-position: 100% 50%; }
-      100% { background-position: 0% 50%; }
-    }
-
-    @keyframes fadeInUp {
-      0% { opacity: 0; transform: translateY(20px); }
-      100% { opacity: 1; transform: translateY(0); }
-    }
-
-    body {
-      margin: 0; font-family: 'Segoe UI', sans-serif;
-      background: linear-gradient(-45deg, #0f2027, #203a43, #2c5364);
-      background-size: 400% 400%;
-      animation: gradientMove 10s ease infinite;
-      display: flex; justify-content: center; align-items: center;
-      height: 100vh; flex-direction: column; text-align: center;
-    }
-
-    h1, h2 {
-      background: linear-gradient(to right, #f7971e, #ffd200);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      animation: fadeInUp 2s ease forwards;
-      opacity: 0;
-    }
-
-    h1 {
-      font-size: 32px;
-      animation-delay: 0.5s;
-    }
-
-    h2 {
-      font-size: 20px;
-      animation-delay: 1.5s;
-    }
-
-    .box {
-      background: rgba(255, 255, 255, 0.95); padding: 20px; border-radius: 15px;
-      box-shadow: 0 0 15px rgba(0,0,0,0.3); width: 300px;
-      animation: fadeInUp 2s ease forwards;
-      animation-delay: 2.5s;
-      opacity: 0;
-    }
-
-    input {
-      width: 90%; padding: 10px; margin: 10px 0;
-      border-radius: 10px; border: 1px solid #ccc;
-    }
-
-    button {
-      width: 95%; padding: 10px; margin-top: 10px;
-      background-color: #27ae60; color: white;
-      border: none; border-radius: 10px; cursor: pointer;
-      transition: background-color 0.3s ease;
-    }
-
-    button:hover {
-      background-color: #1e8449;
-    }
-
-    #main { display: none; }
+    body { font-family: 'Cairo', sans-serif; background: #eef2f7; text-align: center; direction: rtl; margin: 0; padding: 20px; }
+    .card { background: white; max-width: 500px; margin: auto; padding: 20px; border-radius: 12px; box-shadow: 0 0 10px #ccc; margin-top: 20px; }
+    input, button, select { width: 90%; padding: 10px; margin: 10px 0; border-radius: 6px; border: 1px solid #aaa; font-size: 16px; }
+    button { background: #4CAF50; color: white; border: none; cursor: pointer; }
+    button:hover { background: #388E3C; }
+    .hidden { display: none; }
+    h2 { color: #2c3e50; }
   </style>
 </head>
 <body>
-  <h1>أهلاً وسهلاً بكم في ديناري</h1>
-  <h2>Welcome in Dinary</h2>
 
-  <div class="box" id="auth">
-    <h3>تسجيل / دخول</h3>
-    <input type="text" id="username" placeholder="اسم المستخدم" required>
-    <input type="password" id="password" placeholder="كلمة المرور" required>
-    <button onclick="register()">تسجيل</button>
-    <button onclick="login()">دخول</button>
+  <div class="card" id="authBox">
+    <h2>منصة دينارنا</h2>
+    <input type="text" id="username" placeholder="اسم المستخدم">
+    <input type="password" id="password" placeholder="كلمة المرور">
+    <button onclick="register()">تسجيل جديد</button>
+    <button onclick="login()">تسجيل الدخول</button>
   </div>
 
-  <div class="box" id="main">
-    <h2>مرحبًا <span id="userDisplay"></span>!</h2>
-    <p>أهلاً بك في حسابك.</p>
-    <button onclick="logout()">تسجيل الخروج</button>
+  <div class="card hidden" id="mainBox">
+    <h3>مرحبًا <span id="userDisplay"></span> 👋</h3>
+    <p>رصيدك: <span id="pointsDisplay">0</span> دينار</p>
+
+    <button onclick="spin()">🎯 جرب حظك</button>
+
+    <div id="vipBox" class="hidden">
+      <h4>⭐ مهام VIP</h4>
+      <p>أنت VIP! لديك مهام خاصة.</p>
+    </div>
+
+    <h4>🔁 إعادة شحن</h4>
+    <input type="text" id="rechargeAmount" placeholder="المبلغ">
+    <input type="text" id="rechargePhone" placeholder="رقم الهاتف">
+    <button onclick="requestRecharge()">إرسال طلب الشحن</button>
+
+    <h4>💵 سحب الرصيد</h4>
+    <input type="text" id="withdrawAmount" placeholder="المبلغ">
+    <input type="text" id="withdrawPhone" placeholder="رقم زين كاش">
+    <button onclick="requestWithdraw()">طلب سحب</button>
+
+    <br><br>
+    <button onclick="logout()">🚪 تسجيل الخروج</button>
   </div>
 
-  <script>
-    const authBox = document.getElementById("auth");
-    const mainBox = document.getElementById("main");
-    const userDisplay = document.getElementById("userDisplay");
+<script>
+const token = "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";
+const repo = "afaqodamos/dinarna-platform";
+const email = "afaq.11504@gmail.com";
 
-    window.onload = () => {
-      const storedUser = localStorage.getItem("user");
-      const storedPass = localStorage.getItem("pass");
-      if (storedUser && storedPass) {
-        showMain(storedUser);
-      }
-    };
+let currentUser = null;
 
-    function register() {
-      const user = document.getElementById("username").value;
-      const pass = document.getElementById("password").value;
-      if (user && pass) {
-        localStorage.setItem("user", user);
-        localStorage.setItem("pass", pass);
-        alert("تم التسجيل بنجاح");
-        showMain(user);
-      } else {
-        alert("يرجى تعبئة كل الحقول");
-      }
-    }
+async function fetchFile(file) {
+  const res = await fetch(`https://api.github.com/repos/${repo}/contents/${file}`, {
+    headers: { Authorization: "token " + token }
+  });
+  const data = await res.json();
+  const content = JSON.parse(decodeURIComponent(escape(atob(data.content))));
+  return { content, sha: data.sha };
+}
 
-    function login() {
-      const user = document.getElementById("username").value;
-      const pass = document.getElementById("password").value;
-      const storedUser = localStorage.getItem("user");
-      const storedPass = localStorage.getItem("pass");
+async function updateFile(file, data, sha, msg) {
+  const content = btoa(unescape(encodeURIComponent(JSON.stringify(data, null, 2))));
+  await fetch(`https://api.github.com/repos/${repo}/contents/${file}`, {
+    method: "PUT",
+    headers: {
+      Authorization: "token " + token,
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+      message: msg,
+      committer: { name: "afaqodamos", email: email },
+      content, sha, branch: "main"
+    })
+  });
+}
 
-      if (user === storedUser && pass === storedPass) {
-        showMain(user);
-      } else {
-        alert("بيانات الدخول غير صحيحة");
-      }
-    }
+async function register() {
+  const name = document.getElementById("username").value;
+  const pass = document.getElementById("password").value;
+  if (!name || !pass) return alert("يرجى تعبئة كل الحقول");
 
-    function logout() {
-      authBox.style.display = "block";
-      mainBox.style.display = "none";
-    }
+  const { content: users, sha } = await fetchFile("users.json");
+  if (users.find(u => u.name === name)) return alert("اسم المستخدم موجود مسبقًا");
 
-    function showMain(username) {
-      authBox.style.display = "none";
-      mainBox.style.display = "block";
-      userDisplay.innerText = username;
-    }
-  </script>
+  const newUser = { name, pass, points: 3000 };
+  users.push(newUser);
+  await updateFile("users.json", users, sha, "تسجيل مستخدم جديد");
+  localStorage.setItem("user", JSON.stringify(newUser));
+  showUser(newUser);
+}
+
+async function login() {
+  const name = document.getElementById("username").value;
+  const pass = document.getElementById("password").value;
+  const { content: users } = await fetchFile("users.json");
+  const user = users.find(u => u.name === name && u.pass === pass);
+  if (!user) return alert("بيانات غير صحيحة");
+  localStorage.setItem("user", JSON.stringify(user));
+  showUser(user);
+}
+
+function showUser(user) {
+  currentUser = user;
+  document.getElementById("authBox").classList.add("hidden");
+  document.getElementById("mainBox").classList.remove("hidden");
+  document.getElementById("userDisplay").textContent = user.name;
+  document.getElementById("pointsDisplay").textContent = user.points;
+
+  if (user.points >= 7000) {
+    document.getElementById("vipBox").classList.remove("hidden");
+  }
+}
+
+function logout() {
+  localStorage.removeItem("user");
+  location.reload();
+}
+
+async function spin() {
+  const prizes = [0, 250, 500, 1000, 2000, 5000];
+  const prize = prizes[Math.floor(Math.random() * prizes.length)];
+  currentUser.points += prize;
+  document.getElementById("pointsDisplay").textContent = currentUser.points;
+  const { content: users, sha } = await fetchFile("users.json");
+  const i = users.findIndex(u => u.name === currentUser.name);
+  users[i] = currentUser;
+  await updateFile("users.json", users, sha, "تحديث نقاط المستخدم بعد لف العجلة");
+  alert("ربحت " + prize + " دينار 🎉");
+}
+
+async function requestRecharge() {
+  const amount = document.getElementById("rechargeAmount").value;
+  const phone = document.getElementById("rechargePhone").value;
+  if (!amount || !phone) return alert("يرجى تعبئة كل الحقول");
+  const { content, sha } = await fetchFile("recharges.json");
+  content.push({ name: currentUser.name, amount, phone, date: new Date().toLocaleString() });
+  await updateFile("recharges.json", content, sha, "طلب إعادة شحن جديد");
+  alert("تم إرسال طلب الشحن ✅");
+}
+
+async function requestWithdraw() {
+  const amount = document.getElementById("withdrawAmount").value;
+  const phone = document.getElementById("withdrawPhone").value;
+  if (!amount || !phone) return alert("يرجى تعبئة كل الحقول");
+  if (currentUser.points < parseInt(amount)) return alert("رصيد غير كافٍ");
+
+  currentUser.points -= parseInt(amount);
+  document.getElementById("pointsDisplay").textContent = currentUser.points;
+
+  const { content: users, sha: shaUsers } = await fetchFile("users.json");
+  const i = users.findIndex(u => u.name === currentUser.name);
+  users[i] = currentUser;
+  await updateFile("users.json", users, shaUsers, "تحديث الرصيد بعد السحب");
+
+  const { content: withdraws, sha } = await fetchFile("withdraws.json");
+  withdraws.push({ name: currentUser.name, amount, phone, date: new Date().toLocaleString() });
+  await updateFile("withdraws.json", withdraws, sha, "طلب سحب جديد");
+  alert("تم إرسال طلب السحب ✅");
+}
+
+const saved = localStorage.getItem("user");
+if (saved) showUser(JSON.parse(saved));
+</script>
 </body>
 </html>
